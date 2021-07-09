@@ -5,17 +5,65 @@
  */
 package appjavacomminucationwithpki;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
+
 /**
  *
  * @author DjiBrilou
  */
 public class PKI extends javax.swing.JFrame {
 
+    //FRAME VARIABLES
+    private static JPanel contentPane;
+    private JPanel panelNorth;
+    private JLabel labelPki;
+    private JPanel panelNorthSouth;
+    private JLabel lblUsername;
+    private JLabel lblPname;
+    private JLabel lblIdSchool;
+    private JLabel lblBirth;
+    private JTextField txtUsername;
+    private JTextField txtPname;
+    private JTextField txtSchool;
+    private JTextField txtBirth;
+
     /**
      * Creates new form PKI
      */
     public PKI() {
         initComponents();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 570, 400);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(new BorderLayout(0, 0));
+                
+                panelNorth = new JPanel();
+		contentPane.add(panelNorth, BorderLayout.NORTH);
+		panelNorth.setLayout(new BorderLayout(0, 0));
+                
+                labelPki = new JLabel("PKI");
+		labelPki.setHorizontalAlignment(SwingConstants.CENTER);
+		labelPki.setFont(new Font("Tahoma", Font.PLAIN, 40));
+		panelNorth.add(labelPki, BorderLayout.NORTH);
+                
+                panelNorthSouth = new JPanel();
+		panelNorth.add(panelNorthSouth, BorderLayout.SOUTH);
+		panelNorthSouth.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+                
+                lblUsername = new JLabel("Username");
+                panelNorthSouth.add(lblUsername);
+                
+                //panelNorthSouth.add(txtUsername);
     }
 
     /**

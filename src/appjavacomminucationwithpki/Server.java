@@ -103,6 +103,23 @@ public class Server extends javax.swing.JFrame implements ActionListener {
             p.println(message);
         }
     }
+    
+    //Methode pour envoyer le message a un client specifique
+    
+    private static void PrivatetMessage(String message,String name) {
+        
+        System.out.println(name);
+        
+        for(String nName : connectedClients.keySet()){
+            System.out.println(nName);
+            if(nName.equals(name)){
+                
+                PrintWriter p = connectedClients.get(name);
+                p.println(message);
+            
+            }
+        }
+    }
 
     
     public static void addToLogs(String message) {
@@ -187,15 +204,19 @@ public class Server extends javax.swing.JFrame implements ActionListener {
                 sortieMessage.println("Bienvenue dans Le Chat De TDSI , " + name.toUpperCase());
                 broadcastMessage("[SYSTEM] " + name.toUpperCase() + " a Rejoint La TDSI CHAT.");
                 connectedClients.put(name, sortieMessage); //on met le client dans la tables des connectes
-                sortieMessage.println("Vous pouvez Maintenant Comminuquer ");
+                sortieMessage.println("Vous pouvez Maintenant Communiquer ");
                 String message;
                 while ((message = entreeMessage.readLine()) != null) {
 
                     if (message.equals("Naibey")) {
                         break;
                     }
+                     //on recupere le nom du destinataire du message,l'objet du deuxieme clic
+                    String nameToSend = entreeMessage.readLine();
 
-                    broadcastMessage(String.format("[%s] %s", name, message));
+                    //envoi du message au client concerne pour le cas de private,a tous les client pour le cas du brodcast methode
+                   // broadcastMessage(String.format("[%s] %s", name, message));
+                    PrivatetMessage(String.format("[%s] %s", name, message),nameToSend);
 
                 }
             } catch (Exception e) {

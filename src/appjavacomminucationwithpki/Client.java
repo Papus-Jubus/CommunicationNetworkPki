@@ -67,6 +67,7 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 	private JTextField txtPort;
         private JTextField txtAddress;
 	private String clientName;
+        private JTextField txtNameToSend;
         
     /**
      * Creates new form Client
@@ -135,7 +136,11 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 
 		txtMessage = new JTextField();
 		panelSouth.add(txtMessage);
-		txtMessage.setColumns(30);
+		txtMessage.setColumns(20);
+                
+                txtNameToSend = new JTextField();
+                panelSouth.add(txtNameToSend);
+		txtNameToSend.setColumns(10);
 
 		btnSend = new JButton("SEND");
 		
@@ -258,6 +263,7 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 	}
     @Override
     public void actionPerformed(ActionEvent e) {
+        //ICI ON TEST SI LE CLIENT EST CERTIFIE,S'IL EST NOUVEAU ,ON LUI GENERE UNE PAIRE DE CLES
         if(e.getSource() == btnStart) {
 			if(btnStart.getText().equals("START")) {
 				btnStart.setText("STOP");
@@ -268,10 +274,15 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 			}
 		}else if(e.getSource() == btnSend) {
 			String message = txtMessage.getText().trim();
+                         String nomClientCible = txtNameToSend.getText().trim();
 			if(!message.isEmpty()) {
 				sortieMessage.println(message);
 				txtMessage.setText("");
-			}
+			} else if(!nomClientCible.isEmpty()){
+                            sortieMessage.flush();
+                            sortieMessage.println(nomClientCible);
+                            txtNameToSend.setText("");
+                        }
 		}
     }
 }
