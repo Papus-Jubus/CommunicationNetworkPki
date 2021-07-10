@@ -103,6 +103,7 @@ public class Server extends javax.swing.JFrame implements ActionListener {
     public static void stop() throws IOException {
         if (!server.isClosed()) {
             server.close();
+            System.exit(0);
         }
     }
 
@@ -225,6 +226,7 @@ public class Server extends javax.swing.JFrame implements ActionListener {
                 connectedClients.put(name, sortieMessage); //on met le client dans la tables des connectes
                 connectedClientPrivateKey.put(name, ClientPublicKey);//on enregistre la cle public du client
                 sortieMessage.println("Vous pouvez Maintenant Communiquer ");
+                 sortieMessage.println("Votre Cle Prive est :"+ClientPrivateKey);
                 String message;
                 while ((message = entreeMessage.readLine()) != null) {
 
