@@ -11,17 +11,27 @@ package appjavacomminucationwithpki.Security;
  */
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public class KeyGen {
-  public static void main(String[] argv) throws Exception {
-    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-    keyGen.initialize(1024);
-    KeyPair keypair = keyGen.genKeyPair();
-    PrivateKey privateKey = keypair.getPrivate();
-    System.out.println(privateKey);
-    PublicKey publicKey = keypair.getPublic();
-    System.out.println(publicKey);
-  }
+  KeyPairGenerator keyGen;
+      KeyPair keypair;
+       PrivateKey privateKey;
+       PublicKey publicKey;
+    
+    public KeyGen() throws NoSuchAlgorithmException{
+        this.keyGen=KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(1024);
+        this.keypair=keyGen.genKeyPair();
+        privateKey = keypair.getPrivate();
+        this.publicKey=keypair.getPublic();
+        
+    }
+    
+    public PrivateKey getPrivate(){return this.privateKey;}
+    public PublicKey  getPublicKey() {return this.publicKey;}
+ 
+    
 }

@@ -29,6 +29,13 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 
+
+//LOCAL IMPORTING
+import appjavacomminucationwithpki.Security.KeyGen;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
 /**
  *
  * @author Dell
@@ -39,6 +46,7 @@ public class Server extends javax.swing.JFrame implements ActionListener {
     private static int PORT;
     public static SimpleDateFormat formatter = new SimpleDateFormat("[hh:mm a]");
     protected static HashMap<String, PrintWriter> connectedClients = new HashMap<>();
+    protected static HashMap<String,PublicKey> connectedClientPrivateKey = new HashMap<>();
     private static final int MAX_CONNECTED = 50;
     private static ServerSocket server;
     private static volatile boolean exit = false;
@@ -156,6 +164,8 @@ public class Server extends javax.swing.JFrame implements ActionListener {
                 }
             } catch (IOException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NoSuchAlgorithmException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
@@ -170,8 +180,17 @@ public class Server extends javax.swing.JFrame implements ActionListener {
         private BufferedReader entreeMessage;
         Socket socket;
         private String name;
+        
+        //=================SECURITY======================
+        KeyGen keyClientGenerate;
+        private PrivateKey ClientPrivateKey;
+        private PublicKey  ClientPublicKey;
 
-        public ClienHandler(Socket socket) {
+        public ClienHandler(Socket socket) throws NoSuchAlgorithmException {
+            this.keyClientGenerate = new KeyGen();
+            
+            ClientPrivateKey = keyClientGenerate.getPrivate();
+            ClientPublicKey = keyClientGenerate.getPublicKey();
             this.socket = socket;
         }
 
@@ -204,6 +223,7 @@ public class Server extends javax.swing.JFrame implements ActionListener {
                 sortieMessage.println("Bienvenue dans Le Chat De TDSI , " + name.toUpperCase());
                 broadcastMessage("[SYSTEM] " + name.toUpperCase() + " a Rejoint La TDSI CHAT.");
                 connectedClients.put(name, sortieMessage); //on met le client dans la tables des connectes
+                connectedClientPrivateKey.put(name, ClientPublicKey);//on enregistre la cle public du client
                 sortieMessage.println("Vous pouvez Maintenant Communiquer ");
                 String message;
                 while ((message = entreeMessage.readLine()) != null) {
