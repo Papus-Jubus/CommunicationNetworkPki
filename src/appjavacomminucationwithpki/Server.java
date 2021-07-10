@@ -266,9 +266,14 @@ public class Server extends javax.swing.JFrame implements ActionListener {
                 start();
                 btnStart.setText("STOP");
             } else {
-                addToLogs("LE SERVEUR EST STOPPE...");
-                exit = true;
-                btnStart.setText("START");
+                try {
+                    addToLogs("LE SERVEUR EST STOPPE...");
+                    exit = true;
+                    btnStart.setText("START");
+                    stop();
+                } catch (IOException ex) {
+                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
 

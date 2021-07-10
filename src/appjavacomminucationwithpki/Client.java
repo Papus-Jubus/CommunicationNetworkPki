@@ -229,6 +229,7 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 		if(!clientSocket.isClosed()) {
 			try {
 				clientSocket.close();
+                                System.exit(0);
 			} catch (IOException e1) {}
 		}
 	}
@@ -264,15 +265,16 @@ public class Client extends javax.swing.JFrame implements ActionListener{
     @Override
     public void actionPerformed(ActionEvent e) {
         //ICI ON TEST SI LE CLIENT EST CERTIFIE,S'IL EST NOUVEAU ,ON LUI GENERE UNE PAIRE DE CLES
-        if(e.getSource() == btnStart) {
-			if(btnStart.getText().equals("START")) {
+        if(e.getSource() == btnStart ) {
+             boolean EmptyInfo = txtAddress.getText().isEmpty() && txtNickname.getText().isEmpty() && txtPort.getText().isEmpty();
+			if(btnStart.getText().equals("START") && !EmptyInfo) {
 				btnStart.setText("STOP");
 				start();
 			}else {
 				btnStart.setText("START");
 				stop();
 			}
-		}else if(e.getSource() == btnSend) {
+		}else if(e.getSource() == btnSend && !txtMessage.getText().isEmpty()) {
 			String message = txtMessage.getText().trim();
                          String nomClientCible = txtNameToSend.getText().trim();
 			if(!message.isEmpty()) {
