@@ -309,7 +309,7 @@ public class Server extends javax.swing.JFrame implements ActionListener {
                 sortieMessage.println("Vous pouvez Maintenant Communiquer ");
                   String EncryptedReceivedClientMessageSring;
                 
-               
+                
                 while ((EncryptedReceivedClientMessageSring = entreeMessage.readLine()) != null) {
 
                     if (EncryptedReceivedClientMessageSring.equals("Naibey")) {

@@ -103,7 +103,7 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 		panelNorth.setLayout(new BorderLayout(0, 0));
                 panelNorth.setBackground(Color.red);
 
-		lblChatClient = new JLabel("CHAT CLIENT");
+		lblChatClient = new JLabel("WE CHAT,TDSI CHAT");
 		lblChatClient.setHorizontalAlignment(SwingConstants.CENTER);
 		lblChatClient.setFont(new Font("Tahoma", Font.PLAIN, 40));
 		panelNorth.add(lblChatClient, BorderLayout.NORTH);
