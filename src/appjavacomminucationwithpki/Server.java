@@ -32,9 +32,20 @@ import javax.swing.border.EmptyBorder;
 
 //LOCAL IMPORTING
 import appjavacomminucationwithpki.Security.KeyGen;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import sun.misc.BASE64Decoder;
 
 /**
  *
@@ -51,6 +62,11 @@ public class Server extends javax.swing.JFrame implements ActionListener {
     private static ServerSocket server;
     private static volatile boolean exit = false;
     //volatile car ,on est en multithrad,la variable est modifie plusieurs fois,or on doit recuperer une valeur a jour d'ou le mot cle volatile
+
+    //SERVER PUBLIC KEY AND PRIVATE KEY IN STRING
+    private static String publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCgFGVfrY4jQSoZQWWygZ83roKXWD4YeT2x2p41dGkPixe73rT2IW04glagN2vgoZoHuOPqa5and6kAmK2ujmCHu6D1auJhE2tXP+yLkpSiYMQucDKmCsWMnW9XlC5K7OSL77TXXcfvTvyZcjObEz6LIBRzs6+FqpFbUO9SJEfh6wIDAQAB";
+
+    private static String privateKey = "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAKAUZV+tjiNBKhlBZbKBnzeugpdYPhh5PbHanjV0aQ+LF7vetPYhbTiCVqA3a+Chmge44+prlqd3qQCYra6OYIe7oPVq4mETa1c/7IuSlKJgxC5wMqYKxYydb1eULkrs5IvvtNddx+9O/JlyM5sTPosgFHOzr4WqkVtQ71IkR+HrAgMBAAECgYAkQLo8kteP0GAyXAcmCAkA2Tql/8wASuTX9ITD4lsws/VqDKO64hMUKyBnJGX/91kkypCDNF5oCsdxZSJgV8owViYWZPnbvEcNqLtqgs7nj1UHuX9S5yYIPGN/mHL6OJJ7sosOd6rqdpg6JRRkAKUV+tmN/7Gh0+GFXM+ug6mgwQJBAO9/+CWpCAVoGxCA+YsTMb82fTOmGYMkZOAfQsvIV2v6DC8eJrSa+c0yCOTa3tirlCkhBfB08f8U2iEPS+Gu3bECQQCrG7O0gYmFL2RX1O+37ovyyHTbst4s4xbLW4jLzbSoimL235lCdIC+fllEEP96wPAiqo6dzmdH8KsGmVozsVRbAkB0ME8AZjp/9Pt8TDXD5LHzo8mlruUdnCBcIo5TMoRG2+3hRe1dHPonNCjgbdZCoyqjsWOiPfnQ2Brigvs7J4xhAkBGRiZUKC92x7QKbqXVgN9xYuq7oIanIM0nz/wq190uq0dh5Qtow7hshC/dSK3kmIEHe8z++tpoLWvQVgM538apAkBoSNfaTkDZhFavuiVl6L8cWCoDcJBItip8wKQhXwHp0O3HLg10OEd14M58ooNfpgt+8D8/8/2OOFaR0HzA+2Dm";
 
     // JFrame Variables
     private static JPanel container;
@@ -113,7 +129,7 @@ public class Server extends javax.swing.JFrame implements ActionListener {
         }
     }
     
-    //Methode pour envoyer le message a un client specifique
+    //Methode pour envoyer le message a un client specifique,definition canal prive
     
     private static void PrivatetMessage(String message,String name) {
         
@@ -142,6 +158,71 @@ public class Server extends javax.swing.JFrame implements ActionListener {
         int port = FreePortFinder.findFreeLocalPort();
         PORT = port;
         return port;
+    }
+    
+    
+    //======================SECURITY METHODS
+    //on definit la cle public du serveur
+
+    public static PublicKey serverPublickey(String s) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(java.util.Base64.getDecoder().decode(s.getBytes()));
+        KeyFactory keyFactory = null;
+        keyFactory = KeyFactory.getInstance("RSA");
+        PublicKey serverPublicKEey = keyFactory.generatePublic(keySpec);
+
+        return serverPublicKEey;
+
+    }
+
+    //on definit la cle prive du serveur
+    public static PrivateKey serverPrivateKey(String s) throws InvalidKeySpecException {
+        PrivateKey privateKey = null;
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(s.getBytes()));
+        KeyFactory keyFactory = null;
+        try {
+            keyFactory = KeyFactory.getInstance("RSA");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        privateKey = keyFactory.generatePrivate(keySpec);
+        return privateKey;
+    }
+    
+    public static byte[] encrytp(String message,PublicKey publickey) {
+        byte[] chiffre = null;
+        try {
+            
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, publickey);
+            chiffre = cipher.doFinal(message.getBytes());
+            
+            
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchPaddingException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidKeyException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalBlockSizeException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadPaddingException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return chiffre;
+    }
+    
+      public static String decrypt(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return new String(cipher.doFinal(data));
+       
+    }
+      
+      public static String decrypt1(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return new String(cipher.doFinal(data));
     }
 
     /**
@@ -226,20 +307,24 @@ public class Server extends javax.swing.JFrame implements ActionListener {
                 connectedClients.put(name, sortieMessage); //on met le client dans la tables des connectes
                 connectedClientPrivateKey.put(name, ClientPublicKey);//on enregistre la cle public du client
                 sortieMessage.println("Vous pouvez Maintenant Communiquer ");
-                 sortieMessage.println("Votre Cle Prive est :"+ClientPrivateKey);
-                String message;
-                while ((message = entreeMessage.readLine()) != null) {
+                  String EncryptedReceivedClientMessageSring;
+                
+               
+                while ((EncryptedReceivedClientMessageSring = entreeMessage.readLine()) != null) {
 
-                    if (message.equals("Naibey")) {
+                    if (EncryptedReceivedClientMessageSring.equals("Naibey")) {
                         break;
                     }
                      //on recupere le nom du destinataire du message,l'objet du deuxieme clic
                     String nameToSend = entreeMessage.readLine();
 
-                    //envoi du message au client concerne pour le cas de private,a tous les client pour le cas du brodcast methode
-                   // broadcastMessage(String.format("[%s] %s", name, message));
-                    PrivatetMessage(String.format("[%s] %s", name, message),nameToSend);
-
+                    //on transforme le message recu de string a byte
+                    byte[] EncryptedClientmessageByte = new BASE64Decoder().decodeBuffer(EncryptedReceivedClientMessageSring);
+               
+                     System.out.println("Encrypted Message  :"+EncryptedReceivedClientMessageSring);
+                    System.out.println("VEncrypted Message Bytes:  "+EncryptedClientmessageByte);
+                    String DecryptClientSourceMessage = decrypt(EncryptedClientmessageByte, serverPrivateKey(privateKey));
+                    PrivatetMessage(String.format("[%s] %s", name, DecryptClientSourceMessage), nameToSend);
                 }
             } catch (Exception e) {
                 addToLogs(e.getMessage());
@@ -254,6 +339,8 @@ public class Server extends javax.swing.JFrame implements ActionListener {
         }
 
     }
+    
+    
 
     
     //VOICI LA METHODE QUI NOUS PERMET DEMARRER LE SERVEUR

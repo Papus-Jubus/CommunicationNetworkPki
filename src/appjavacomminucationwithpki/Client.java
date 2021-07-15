@@ -6,6 +6,7 @@
 package appjavacomminucationwithpki;
 
 import static appjavacomminucationwithpki.Server.formatter;
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.PrintWriter;
@@ -37,6 +38,18 @@ import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.JTextField;
 /**
  *
@@ -48,7 +61,10 @@ public class Client extends javax.swing.JFrame implements ActionListener{
       private static Socket clientSocket;
 	private static int PORT;
 	private PrintWriter sortieMessage;
+         private static PublicKey serverPublicKEey;
         
+         
+         
         
         //JFRAME VARIABLE
         private static JPanel contentPane;
@@ -80,10 +96,12 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
+                contentPane.setBackground(Color.magenta);
 
 		panelNorth = new JPanel();
 		contentPane.add(panelNorth, BorderLayout.NORTH);
 		panelNorth.setLayout(new BorderLayout(0, 0));
+                panelNorth.setBackground(Color.red);
 
 		lblChatClient = new JLabel("CHAT CLIENT");
 		lblChatClient.setHorizontalAlignment(SwingConstants.CENTER);
@@ -119,12 +137,13 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 		panelNorthSouth.add(btnStart);
 		btnStart.addActionListener(this);
 		btnStart.setFont(new Font("Tahoma", Font.PLAIN, 12));
+                btnStart.setBackground(Color.GREEN);
 
 		JScrollPane scrollPane = new JScrollPane();
 		contentPane.add(scrollPane, BorderLayout.CENTER);
 
 		txtAreaLogs = new JTextArea();
-		txtAreaLogs.setBackground(Color.BLACK);
+		txtAreaLogs.setBackground(Color.BLUE);
 		txtAreaLogs.setForeground(Color.WHITE);
 		txtAreaLogs.setLineWrap(true);
 		scrollPane.setViewportView(txtAreaLogs);
@@ -143,6 +162,7 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 		txtNameToSend.setColumns(10);
 
 		btnSend = new JButton("SEND");
+                btnSend.setBackground(Color.GREEN);
 		
 		btnSend.addActionListener(this);
 		btnSend.setFont(new Font("Tahoma", Font.PLAIN, 12));
@@ -220,6 +240,12 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 			new Thread(new Listener()).start();
 			//send name
 			sortieMessage.println(clientName);
+                        
+                         //============================================security,On definit la cle public du serveur
+            String PublicKeyString = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCgFGVfrY4jQSoZQWWygZ83roKXWD4YeT2x2p41dGkPixe73rT2IW04glagN2vgoZoHuOPqa5and6kAmK2ujmCHu6D1auJhE2tXP+yLkpSiYMQucDKmCsWMnW9XlC5K7OSL77TXXcfvTvyZcjObEz6LIBRzs6+FqpFbUO9SJEfh6wIDAQAB";
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(java.util.Base64.getDecoder().decode(PublicKeyString.getBytes()));
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            serverPublicKEey = keyFactory.generatePublic(keySpec);
 		} catch (Exception err) {
 			addToLogs("[ERROR] "+err.getLocalizedMessage());
 		}
@@ -239,6 +265,41 @@ public class Client extends javax.swing.JFrame implements ActionListener{
         //txtAreaLogs.append(message+" \n");
         txtAreaLogs.append(formatter.format(new Date())+"  ");
         txtAreaLogs.append(message+" \n");
+    }
+        
+         //==========================================SECURITY METHODES
+    public static PublicKey serverPublickey(String s) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(java.util.Base64.getDecoder().decode(s.getBytes()));
+        KeyFactory keyFactory = null;
+        keyFactory = KeyFactory.getInstance("RSA");
+        PublicKey serverPublicKEey = keyFactory.generatePublic(keySpec);
+
+        return serverPublicKEey;
+
+    }
+
+    //METHODE QUI CHIFFRE
+    public static byte[] encrytp(String message, PublicKey publickey) {
+        byte[] chiffre = null;
+        try {
+
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, publickey);
+            chiffre = cipher.doFinal(message.getBytes());
+
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchPaddingException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidKeyException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalBlockSizeException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadPaddingException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return chiffre;
     }
 
         
@@ -264,22 +325,31 @@ public class Client extends javax.swing.JFrame implements ActionListener{
 	}
     @Override
     public void actionPerformed(ActionEvent e) {
-        //ICI ON TEST SI LE CLIENT EST CERTIFIE,S'IL EST NOUVEAU ,ON LUI GENERE UNE PAIRE DE CLES
+        
         if(e.getSource() == btnStart ) {
              boolean EmptyInfo = txtAddress.getText().isEmpty() && txtNickname.getText().isEmpty() && txtPort.getText().isEmpty();
 			if(btnStart.getText().equals("START") && !EmptyInfo) {
 				btnStart.setText("STOP");
+                                btnStart.setBackground(Color.RED);
 				start();
 			}else {
 				btnStart.setText("START");
+                                btnStart.setBackground(Color.GREEN);
 				stop();
 			}
-		}else if(e.getSource() == btnSend && !txtMessage.getText().isEmpty()) {
+		}else if(e.getSource() == btnSend && (!txtMessage.getText().isEmpty()|| !txtNameToSend.getText().isEmpty() )) {
 			String message = txtMessage.getText().trim();
                          String nomClientCible = txtNameToSend.getText().trim();
+                         byte[] clientEncryptedMessage;
+                         
 			if(!message.isEmpty()) {
-				sortieMessage.println(message);
+                            
+                             clientEncryptedMessage = encrytp(message,serverPublicKEey);
+                             String messageClient = new Base64().encode(clientEncryptedMessage);
+				sortieMessage.println(messageClient);
 				txtMessage.setText("");
+                                
+                               
 			} else if(!nomClientCible.isEmpty()){
                             sortieMessage.flush();
                             sortieMessage.println(nomClientCible);
